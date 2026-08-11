@@ -1,5 +1,5 @@
 import numpy as np
-from inside import LogPartitionSemiring, left_to_right, valid_pair
+from inside import LogPartitionSemiring, left_to_right, mfe_s, valid_pair
 from outside import base_pair_probs
 
 
@@ -13,7 +13,9 @@ def recover_edges(sequence, inside, semiring, i, end):
         if valid_pair(sequence, k, j):
             left_weight = inside[k].get(i, semiring.zero)
             inside_weight = inside[j].get(k+1, semiring.zero)
-            paired = semiring.paired(sequence, k, j, left_weight, inside_weight)
+            energy = mfe_s[sequence[k]+sequence[j]]
+            weight = semiring.energy_to_semiring_element(energy)
+            paired = left_weight*inside_weight*weight
             if paired != semiring.zero:
                 edges.append(("paired", paired, (k, j), (i, k), (k+1, j)))
     return edges
@@ -45,7 +47,7 @@ def pick_structure(sequence, inside, structure, edge_cache, semiring, probs, i, 
         pick_structure(sequence, inside, structure, edge_cache, semiring, probs, inside_i, inside_end, rng)
 
 def linear_sampling(sequence, num_samples, beam_size):
-    semiring = LogPartitionSemiring()
+    semiring = LogPartitionSemiring
     _, inside = left_to_right(sequence, beam_size, semiring)
     edge_cache = {}
     samples = []
